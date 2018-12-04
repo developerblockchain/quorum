@@ -19,13 +19,14 @@ package vm
 import (
 	"crypto/sha256"
 	"errors"
+	"math/big"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/bn256"
 	"github.com/ethereum/go-ethereum/params"
 	"golang.org/x/crypto/ripemd160"
-	"math/big"
 )
 
 // PrecompiledContract is the basic interface for native Go contracts. The implementation
@@ -43,7 +44,6 @@ var PrecompiledContractsHomestead = map[common.Address]PrecompiledContract{
 	common.BytesToAddress([]byte{2}): &sha256hash{},
 	common.BytesToAddress([]byte{3}): &ripemd160hash{},
 	common.BytesToAddress([]byte{4}): &dataCopy{},
-	common.BytesToAddress([]byte{9}): &zkVerifyProof{},
 }
 
 // PrecompiledContractsByzantium contains the default set of pre-compiled Ethereum
@@ -57,7 +57,6 @@ var PrecompiledContractsByzantium = map[common.Address]PrecompiledContract{
 	common.BytesToAddress([]byte{6}): &bn256Add{},
 	common.BytesToAddress([]byte{7}): &bn256ScalarMul{},
 	common.BytesToAddress([]byte{8}): &bn256Pairing{},
-	common.BytesToAddress([]byte{9}): &zkVerifyProof{},
 }
 
 // RunPrecompiledContract runs and evaluates the output of a precompiled contract.
@@ -117,7 +116,7 @@ func (c *sha256hash) Run(input []byte) ([]byte, error) {
 	return h[:], nil
 }
 
-// RIPEMD160 implemented as a native contract.
+// RIPMED160 implemented as a native contract.
 type ripemd160hash struct{}
 
 // RequiredGas returns the gas required to execute the pre-compiled contract.
@@ -355,24 +354,6 @@ func (c *bn256Pairing) Run(input []byte) ([]byte, error) {
 	}
 	// Execute the pairing checks and return the results
 	if bn256.PairingCheck(cs, ts) {
-		return true32Byte, nil
-	}
-	return false32Byte, nil
-}
-
-type zkVerifyProof struct{}
-
-func (c *zkVerifyProof) RequiredGas(input []byte) uint64 {
-	return uint64(180000)
-}
-
-var (
-	errInvalidInputToProofs = errors.New("invalid input to verify proofs")
-)
-
-func (c *zkVerifyProof) Run(input []byte) ([]byte, error) {
-
-	if len(input) > 0 {
 		return true32Byte, nil
 	}
 	return false32Byte, nil
